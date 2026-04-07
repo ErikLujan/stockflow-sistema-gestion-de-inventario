@@ -54,7 +54,7 @@ def create_app() -> FastAPI:
 
     app.include_router(api_router, prefix=settings.API_V1_STR)
 
-    @app.get("/health", methods=["GET", "HEAD"], tags=["Health Check"])
+    @app.api_route("/health", methods=["GET", "HEAD"], tags=["Health Check"])
     def health_check() -> dict:
         """
         Endpoint de verificación de estado.
