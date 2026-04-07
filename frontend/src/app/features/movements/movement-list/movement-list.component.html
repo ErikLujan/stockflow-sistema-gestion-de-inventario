@@ -1,0 +1,375 @@
+<div class="space-y-6">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-text-primary">Movimientos de Inventario</h1>
+            <p class="text-sm text-text-secondary mt-1">Historial de entradas y salidas.</p>
+        </div>
+
+        <div class="flex items-center space-x-3 w-full sm:w-auto">
+
+            <button (click)="exportToPdf()" [disabled]="movements().length === 0"
+                class="flex items-center px-4 py-2.5 bg-surface border border-border-subtle rounded-xl text-text-secondary hover:text-critical hover:border-critical/30 hover:bg-critical/5 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z">
+                    </path>
+                </svg>
+                <span class="font-medium">PDF</span>
+            </button>
+
+            <button (click)="exportToExcel()" [disabled]="movements().length === 0"
+                class="flex items-center px-4 py-2.5 bg-surface border border-border-subtle rounded-xl text-text-secondary hover:text-success hover:border-success/30 hover:bg-success/5 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                    </path>
+                </svg>
+                <span class="font-medium">Excel</span>
+            </button>
+
+            <button (click)="openModal()"
+                class="flex items-center justify-center px-5 py-2.5 bg-accent hover:bg-accent-hover text-white rounded-xl font-medium transition-colors shadow-sm shadow-accent/20 ml-auto sm:ml-0">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Nuevo
+            </button>
+        </div>
+    </div>
+
+    <div
+        class="mb-6 bg-surface p-4 rounded-xl border border-border-subtle shadow-sm flex flex-col md:flex-row gap-4 items-end">
+
+        <div class="w-full md:w-1/4">
+            <label class="block text-xs font-medium text-text-secondary mb-1.5 uppercase tracking-wider">Tipo</label>
+            <div class="relative">
+                <select [value]="filterType()" (change)="onFilterTypeChange($event)"
+                    class="w-full px-4 py-2.5 bg-main border border-border-subtle rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent transition-all appearance-none cursor-pointer">
+                    <option value="">Todos los tipos</option>
+                    <option value="compra">Compra (+)</option>
+                    <option value="venta">Venta (-)</option>
+                    <option value="ajuste">Ajuste (±)</option>
+                    <option value="devolucion">Devolución (+)</option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-text-secondary">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="w-full md:w-1/4">
+            <label class="block text-xs font-medium text-text-secondary mb-1.5 uppercase tracking-wider">Desde</label>
+            <input type="date" [value]="filterStartDate()" (change)="onStartDateChange($event)"
+                class="w-full px-4 py-2.5 bg-main border border-border-subtle rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent transition-all cursor-pointer">
+        </div>
+
+        <div class="w-full md:w-1/4">
+            <label class="block text-xs font-medium text-text-secondary mb-1.5 uppercase tracking-wider">Hasta</label>
+            <input type="date" [value]="filterEndDate()" (change)="onEndDateChange($event)"
+                class="w-full px-4 py-2.5 bg-main border border-border-subtle rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent transition-all cursor-pointer">
+        </div>
+
+        <div class="w-full md:w-1/4 flex gap-2">
+            <button (click)="applyDateFilters()"
+                class="flex-1 px-4 py-2.5 bg-surface border border-border-subtle rounded-lg text-text-primary hover:text-accent hover:border-accent/30 transition-all font-medium flex justify-center items-center">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+                Buscar
+            </button>
+
+            <button *ngIf="filterType() || filterStartDate() || filterEndDate()" (click)="clearFilters()"
+                class="px-4 py-2.5 bg-critical/5 border border-critical/20 rounded-lg text-critical hover:bg-critical/10 transition-all font-medium flex justify-center items-center"
+                title="Limpiar filtros">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    </path>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <div *ngIf="isLoading()" class="flex justify-center items-center py-20">
+        <svg class="animate-spin h-10 w-10 text-accent" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+            </path>
+        </svg>
+    </div>
+
+    <div *ngIf="error()"
+        class="bg-critical/10 border border-critical/30 text-critical p-4 rounded-xl flex items-center">
+        <svg class="w-6 h-6 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <span>{{ error() }}</span>
+    </div>
+
+    <div *ngIf="!isLoading() && !error()"
+        class="bg-surface border border-border-subtle rounded-2xl shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm whitespace-nowrap">
+                <thead class="bg-main/50 text-text-secondary uppercase text-xs border-b border-border-subtle">
+                    <tr>
+                        <th class="px-6 py-4 font-semibold tracking-wider">Fecha</th>
+                        <th class="px-6 py-4 font-semibold tracking-wider w-full">Producto</th>
+                        <th class="px-6 py-4 font-semibold tracking-wider text-center">Tipo</th>
+                        <th class="px-6 py-4 font-semibold tracking-wider text-right">Cantidad</th>
+                        <th class="px-6 py-4 font-semibold tracking-wider">Notas</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-border-subtle">
+                    <tr *ngFor="let mov of paginatedMovements()" class="hover:bg-main/30 transition-colors">
+                        <td class="px-6 py-4 text-text-secondary">{{ mov.created_at | date:'dd/MM/yyyy HH:mm' }}</td>
+                        <td class="px-6 py-4 font-medium text-text-primary">{{ mov.product?.name ||
+                            getProductName(mov.product_id) }}</td>
+                        <td class="px-6 py-4 text-center">
+                            <span
+                                [ngClass]="(mov.movement_type.toUpperCase() === 'COMPRA' || mov.movement_type.toUpperCase() === 'DEVOLUCION') ? 'text-success bg-success/10' : 'text-critical bg-critical/10'"
+                                class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide">
+                                <span class="mr-1">{{ (mov.movement_type.toUpperCase() === 'COMPRA' ||
+                                    mov.movement_type.toUpperCase() === 'DEVOLUCION') ? '+' : '-' }}</span>
+                                {{ mov.movement_type }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-right font-medium text-text-primary">{{ mov.quantity }}</td>
+                        <td class="px-6 py-4 text-center">
+                            <button *ngIf="mov.reason" type="button" (click)="openNotesModal(mov.reason)"
+                                class="p-1.5 rounded-lg text-text-secondary hover:text-accent hover:bg-accent/10 transition-all transform hover:scale-110"
+                                title="Ver motivo">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                            </button>
+                            <span *ngIf="!mov.reason" class="text-border-subtle">--</span>
+                        </td>
+                    </tr>
+                    <tr *ngIf="movements().length === 0">
+                        <td colspan="5" class="px-6 py-12 text-center text-text-secondary">
+                            <div class="flex flex-col items-center justify-center">
+                                <svg class="w-12 h-12 text-border-subtle mb-3" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4">
+                                    </path>
+                                </svg>
+                                <p *ngIf="!filterType() && !filterStartDate() && !filterEndDate()">No hay movimientos
+                                    registrados en el inventario aún.</p>
+                                <p *ngIf="filterType() || filterStartDate() || filterEndDate()">No se encontraron
+                                    movimientos con los filtros aplicados.</p>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div *ngIf="movements().length > 0"
+            class="px-6 py-4 border-t border-border-subtle bg-surface flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="text-sm text-text-secondary">
+                Mostrando <span class="font-medium text-text-primary">{{ (currentPage() - 1) * itemsPerPage() + 1
+                    }}</span> a
+                <span class="font-medium text-text-primary">{{ (currentPage() * itemsPerPage()) > movements().length ?
+                    movements().length : (currentPage() * itemsPerPage()) }}</span> de
+                <span class="font-medium text-text-primary">{{ movements().length }}</span> movimientos
+            </div>
+
+            <div class="flex items-center space-x-2">
+                <button (click)="prevPage()" [disabled]="currentPage() === 1"
+                    class="px-3 py-1.5 border border-border-subtle rounded-lg text-text-secondary hover:bg-main hover:text-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium">
+                    Anterior
+                </button>
+                <div
+                    class="flex items-center justify-center px-3 py-1.5 rounded-lg bg-main border border-border-subtle text-text-primary text-sm font-medium min-w-[3rem]">
+                    {{ currentPage() }}
+                </div>
+                <button (click)="nextPage()" [disabled]="currentPage() === totalPages()"
+                    class="px-3 py-1.5 border border-border-subtle rounded-lg text-text-secondary hover:bg-main hover:text-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium">
+                    Siguiente
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div *ngIf="isModalOpen()" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog"
+    aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div (click)="closeModal()" class="fixed inset-0 bg-main/80 backdrop-blur-sm transition-opacity"
+            aria-hidden="true"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+        <div
+            class="inline-block align-bottom bg-surface border border-border-subtle rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <form [formGroup]="movementForm" (ngSubmit)="onSubmit()">
+                <div
+                    class="px-6 py-4 border-b border-border-subtle flex justify-between items-center bg-surface sticky top-0">
+                    <h3 class="text-xl font-bold text-text-primary" id="modal-title">Nuevo Movimiento</h3>
+                    <button type="button" (click)="closeModal()"
+                        class="text-text-secondary hover:text-text-primary transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="px-6 py-6 space-y-5">
+                    <div class="relative">
+                        <label for="product_id" class="block text-sm font-medium text-text-secondary mb-1">Producto
+                            <span class="text-critical">*</span></label>
+                        <select id="product_id" formControlName="product_id"
+                            class="w-full px-4 py-3 bg-main border border-border-subtle rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent transition-all appearance-none cursor-pointer">
+                            <option value="" disabled selected>Selecciona un producto...</option>
+                            <option *ngFor="let product of products()" [value]="product.id"
+                                class="bg-surface text-text-primary">
+                                {{ product.sku | uppercase }} - {{ product.name }} (Stock: {{ product.current_stock }})
+                            </option>
+                        </select>
+                        <div
+                            class="pointer-events-none absolute inset-y-0 right-0 top-6 flex items-center px-4 text-text-secondary">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </div>
+                        <p *ngIf="f['product_id'].invalid && f['product_id'].touched"
+                            class="text-xs text-critical mt-1">Obligatorio.</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="relative">
+                            <label for="movement_type" class="block text-sm font-medium text-text-secondary mb-1">Tipo
+                                <span class="text-critical">*</span></label>
+                            <select id="movement_type" formControlName="movement_type"
+                                class="w-full px-4 py-3 bg-main border border-border-subtle rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent transition-all appearance-none cursor-pointer font-bold">
+                                <option value="" disabled selected>Elige un tipo...</option>
+                                <option value="compra" class="bg-surface text-success">+ Compra (Entrada)</option>
+                                <option value="devolucion" class="bg-surface text-success">+ Devolución (Entrada)
+                                </option>
+                                <option value="ajuste" class="bg-surface text-text-primary">± Ajuste</option>
+                                <option value="venta" class="bg-surface text-critical">- Venta (Salida)</option>
+                            </select>
+                            <div
+                                class="pointer-events-none absolute inset-y-0 right-0 top-6 flex items-center px-4 text-text-secondary">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="quantity" class="block text-sm font-medium text-text-secondary mb-1">Cantidad
+                                <span class="text-critical">*</span></label>
+                            <div
+                                class="flex items-center h-[50px] bg-main border border-border-subtle rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-accent transition-all">
+
+                                <button type="button" (click)="decrementQuantity()" tabindex="-1"
+                                    class="px-4 h-full text-text-secondary hover:text-text-primary hover:bg-border-subtle/50 transition-colors border-r border-border-subtle flex items-center justify-center">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                            d="M20 12H4" />
+                                    </svg>
+                                </button>
+
+                                <input id="quantity" type="number" formControlName="quantity" min="1"
+                                    class="w-full h-full text-center bg-transparent text-text-primary font-medium focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+
+                                <button type="button" (click)="incrementQuantity()" tabindex="-1"
+                                    class="px-4 h-full text-text-secondary hover:text-text-primary hover:bg-border-subtle/50 transition-colors border-l border-border-subtle flex items-center justify-center">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                            d="M12 4v16m8-8H4" />
+                                    </svg>
+                                </button>
+
+                            </div>
+                            <p *ngIf="f['quantity'].invalid && f['quantity'].touched"
+                                class="text-xs text-critical mt-1">Mínimo 1.</p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="reason" class="block text-sm font-medium text-text-secondary mb-1">Motivo /
+                            Notas</label>
+                        <textarea id="reason" rows="2" formControlName="reason"
+                            placeholder="Ej: Compra a proveedor, Ajuste por rotura..."
+                            class="w-full px-4 py-3 bg-main border border-border-subtle rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-accent transition-all resize-none"></textarea>
+                    </div>
+                </div>
+
+                <div class="px-6 py-4 border-t border-border-subtle bg-main/30 flex justify-end gap-3">
+                    <button type="button" (click)="closeModal()"
+                        class="px-5 py-2 rounded-lg border border-border-subtle text-text-secondary hover:text-text-primary transition-colors font-medium">Cancelar</button>
+                    <button type="submit" [disabled]="isSaving()"
+                        class="px-5 py-2 rounded-lg bg-accent hover:bg-accent/90 text-white transition-colors font-medium flex items-center shadow-lg shadow-accent/20 disabled:opacity-60 disabled:cursor-not-allowed">
+                        <svg *ngIf="isSaving()" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none"
+                            viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                            </circle>
+                            <path class="opacity-75" fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                            </path>
+                        </svg>
+                        {{ isSaving() ? 'Procesando...' : 'Confirmar' }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div *ngIf="isNotesModalOpen()" class="fixed inset-0 z-[70] overflow-y-auto" aria-labelledby="modal-title" role="dialog"
+    aria-modal="true">
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+
+        <div (click)="closeNotesModal()" class="fixed inset-0 bg-main/80 backdrop-blur-sm transition-opacity"
+            aria-hidden="true"></div>
+
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+        <div
+            class="inline-block align-bottom bg-surface border border-border-subtle rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full animate-in fade-in slide-in-from-bottom-2 duration-300">
+
+            <div class="px-6 py-4 border-b border-border-subtle flex justify-between items-center bg-surface">
+                <h3 class="text-xl font-bold text-text-primary flex items-center" id="modal-title">
+                    <svg class="w-5 h-5 mr-2 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z">
+                        </path>
+                    </svg>
+                    Motivo Detallado
+                </h3>
+                <button type="button" (click)="closeNotesModal()"
+                    class="text-text-secondary hover:text-text-primary transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="px-6 py-8 bg-main/30">
+                <p class="text-base text-text-primary leading-relaxed whitespace-pre-wrap">
+                    {{ currentNotesToView() }}
+                </p>
+            </div>
+
+            <div class="px-6 py-4 border-t border-border-subtle bg-surface flex justify-end">
+                <button type="button" (click)="closeNotesModal()"
+                    class="px-5 py-2.5 rounded-lg bg-accent/10 text-accent hover:bg-accent/20 transition-colors font-medium text-sm flex items-center shadow-lg shadow-accent/20">
+                    Cerrar Motivo
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

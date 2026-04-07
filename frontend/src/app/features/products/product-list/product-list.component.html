@@ -1,0 +1,361 @@
+<div class="space-y-6">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-text-primary">Catálogo de Productos</h1>
+            <p class="text-sm text-text-secondary mt-1">Gestiona tu inventario y niveles de stock.</p>
+        </div>
+
+        <div class="flex items-center space-x-3 w-full sm:w-auto">
+
+            <button (click)="exportToPdf()" [disabled]="products().length === 0"
+                class="flex items-center px-4 py-2.5 bg-surface border border-border-subtle rounded-xl text-text-secondary hover:text-critical hover:border-critical/30 hover:bg-critical/5 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z">
+                    </path>
+                </svg>
+                <span class="font-medium">PDF</span>
+            </button>
+
+            <button (click)="exportToExcel()" [disabled]="products().length === 0"
+                class="flex items-center px-4 py-2.5 bg-surface border border-border-subtle rounded-xl text-text-secondary hover:text-success hover:border-success/30 hover:bg-success/5 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                    </path>
+                </svg>
+                <span class="font-medium">Excel</span>
+            </button>
+
+            <button routerLink="/productos/nuevo"
+                class="flex items-center justify-center px-5 py-2.5 bg-accent hover:bg-accent-hover text-white rounded-xl font-medium transition-colors shadow-sm shadow-accent/20">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Nuevo
+            </button>
+        </div>
+    </div>
+
+    <div class="mb-6 bg-surface p-4 rounded-xl border border-border-subtle flex items-center shadow-sm">
+        <div class="relative w-full sm:max-w-md">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg class="w-5 h-5 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+            </div>
+
+            <input type="text" [value]="searchTerm()" (input)="onSearch($event)"
+                class="w-full pl-10 pr-4 py-2.5 bg-main border border-border-subtle rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
+                placeholder="Buscar por nombre, SKU o categoría...">
+        </div>
+
+        <div class="ml-4 text-sm text-text-secondary hidden sm:block">
+            <span class="font-medium text-text-primary">{{ filteredProducts().length }}</span> resultados encontrados
+            <span *ngIf="filteredProducts().length !== products().length">
+                (de {{ products().length }} totales)
+            </span>
+        </div>
+    </div>
+
+    <div *ngIf="isLoading()" class="flex justify-center items-center py-20">
+        <svg class="animate-spin h-10 w-10 text-accent" xmlns="http://www.w3.org/2000/svg" fill="none"
+            viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+            </path>
+        </svg>
+    </div>
+
+    <div *ngIf="error()"
+        class="bg-critical/10 border border-critical/30 text-critical p-4 rounded-xl flex items-center">
+        <svg class="w-6 h-6 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <span>{{ error() }}</span>
+    </div>
+
+    <div *ngIf="!isLoading() && !error()"
+        class="bg-surface border border-border-subtle rounded-2xl shadow-sm overflow-hidden">
+
+        <div class="md:hidden divide-y divide-border-subtle">
+            <div *ngFor="let product of paginatedProducts()" class="p-4 space-y-3">
+                <div class="flex justify-between items-start">
+                    <h3 class="font-semibold text-text-primary text-lg">{{ product.name }}</h3>
+                    <span
+                        class="text-xs font-mono text-text-secondary bg-main px-2 py-1 rounded border border-border-subtle">{{
+                        product.sku }}</span>
+                </div>
+                <div class="flex justify-between items-center text-sm">
+                    <span class="text-text-secondary">Stock:</span>
+                    <span
+                        [ngClass]="{'text-critical bg-critical/10 px-2 py-0.5 rounded-md': product.current_stock <= product.min_stock, 'text-text-primary': product.current_stock > product.min_stock}"
+                        class="font-medium">
+                        {{ product.current_stock }} {{ product.unit_of_measure }}
+                    </span>
+                </div>
+                <div class="pt-2 flex gap-2">
+                    <button [routerLink]="['/productos/editar', product.id]"
+                        class="flex-1 py-1.5 border border-border-subtle rounded-lg text-text-secondary hover:text-text-primary transition-colors text-sm">Editar</button>
+                    <button (click)="deleteProduct(product.id)"
+                        class="flex-1 py-1.5 border border-critical/30 bg-critical/5 rounded-lg text-critical hover:bg-critical/10 transition-colors text-sm">Eliminar</button>
+                </div>
+            </div>
+
+            <div *ngIf="filteredProducts().length === 0" class="p-8 text-center text-text-secondary">
+                <span *ngIf="products().length === 0">No tienes productos registrados aún.</span>
+                <span *ngIf="products().length > 0">No se encontraron resultados para tu búsqueda.</span>
+            </div>
+        </div>
+
+        <div class="hidden md:block overflow-x-auto">
+            <table class="w-full text-left text-sm whitespace-nowrap">
+                <thead class="bg-main/50 text-text-secondary uppercase text-xs border-b border-border-subtle">
+                    <tr>
+                        <th scope="col" class="px-6 py-4 font-semibold tracking-wider">SKU</th>
+                        <th scope="col" class="px-6 py-4 font-semibold tracking-wider w-full">Nombre</th>
+                        <th scope="col" class="px-6 py-4 font-semibold tracking-wider text-right">Unidad</th>
+                        <th scope="col" class="px-6 py-4 font-semibold tracking-wider text-center">Stock</th>
+                        <th scope="col" class="px-6 py-4 font-semibold tracking-wider text-right">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-border-subtle">
+                    <tr *ngFor="let product of paginatedProducts()" class="hover:bg-main/30 transition-colors">
+                        <td class="px-6 py-4 text-text-secondary font-mono">{{ product.sku | uppercase }}</td>
+                        <td class="px-6 py-4 font-medium text-text-primary">{{ product.name }}</td>
+                        <td class="px-6 py-4 text-text-secondary text-right capitalize">{{ product.unit_of_measure }}
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <span
+                                [ngClass]="{'text-critical bg-critical/10': product.current_stock <= product.min_stock, 'text-success bg-success/10': product.current_stock > product.min_stock}"
+                                class="px-3 py-1 rounded-full text-xs font-medium">
+                                {{ product.current_stock }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-right space-x-2.5 flex items-center justify-end">
+                            <button (click)="viewProductDetail(product)"
+                                class="p-1.5 rounded-lg text-text-secondary hover:text-accent hover:bg-accent/10 transition-colors"
+                                title="Ver detalle">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                                    </path>
+                                </svg>
+                            </button>
+
+                            <button [routerLink]="['/productos/editar', product.id]"
+                                class="p-1.5 rounded-lg text-text-secondary hover:text-accent hover:bg-accent/10 transition-colors"
+                                title="Editar">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112 8.284L7.586 20.122a2 2 0 01-1.414.586H2.828a1 1 0 01-1-1v-2.828a2 2 0 01.586-1.414l9.284-9.284z">
+                                    </path>
+                                </svg>
+                            </button>
+
+                            <button (click)="deleteProduct(product.id)"
+                                class="p-1.5 rounded-lg text-critical hover:text-critical hover:bg-critical/10 transition-colors"
+                                title="Eliminar">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                    </path>
+                                </svg>
+                            </button>
+                        </td>
+                    </tr>
+
+                    <tr *ngIf="filteredProducts().length === 0">
+                        <td colspan="5" class="px-6 py-12 text-center text-text-secondary">
+                            <svg class="mx-auto h-12 w-12 text-border-subtle mb-3" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                    d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                            </svg>
+                            <p *ngIf="products().length === 0">No tienes productos registrados aún.</p>
+                            <p *ngIf="products().length > 0">No se encontraron resultados para tu búsqueda.</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div *ngIf="filteredProducts().length > 0"
+            class="px-6 py-4 border-t border-border-subtle bg-surface flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="text-sm text-text-secondary">
+                Mostrando <span class="font-medium text-text-primary">{{ (currentPage() - 1) * itemsPerPage() + 1
+                    }}</span> a
+                <span class="font-medium text-text-primary">{{ (currentPage() * itemsPerPage()) >
+                    filteredProducts().length ? filteredProducts().length : (currentPage() * itemsPerPage()) }}</span>
+                de
+                <span class="font-medium text-text-primary">{{ filteredProducts().length }}</span> resultados
+            </div>
+
+            <div class="flex items-center space-x-2">
+                <button (click)="prevPage()" [disabled]="currentPage() === 1"
+                    class="px-3 py-1.5 border border-border-subtle rounded-lg text-text-secondary hover:bg-main hover:text-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium">
+                    Anterior
+                </button>
+                <div
+                    class="flex items-center justify-center px-3 py-1.5 rounded-lg bg-main border border-border-subtle text-text-primary text-sm font-medium min-w-[3rem]">
+                    {{ currentPage() }}
+                </div>
+                <button (click)="nextPage()" [disabled]="currentPage() === totalPages()"
+                    class="px-3 py-1.5 border border-border-subtle rounded-lg text-text-secondary hover:bg-main hover:text-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium">
+                    Siguiente
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <div *ngIf="isDetailModalOpen() && selectedProduct()" class="fixed inset-0 z-50 overflow-y-auto"
+        aria-labelledby="modal-title" role="dialog" aria-modal="true">
+
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+
+            <div (click)="closeDetailModal()" class="fixed inset-0 bg-main/70 backdrop-blur-sm transition-opacity"
+                aria-hidden="true"></div>
+
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            <div
+                class="inline-block align-bottom bg-surface border border-border-subtle rounded-2xl p-6 sm:p-8 text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full max-h-[90vh] overflow-y-auto">
+
+                <div class="flex justify-between items-start border-b border-border-subtle pb-4 mb-6">
+                    <div>
+                        <h3 class="text-2xl font-bold text-text-primary" id="modal-title">
+                            {{ selectedProduct()?.name }}
+                        </h3>
+                        <div class="flex items-center gap-3 mt-1.5">
+                            <span
+                                class="text-sm font-mono text-text-secondary bg-main px-2 py-0.5 rounded border border-border-subtle">
+                                {{ selectedProduct()?.sku }}
+                            </span>
+                            <span
+                                [ngClass]="{'text-success bg-success/10': selectedProduct()?.is_active, 'text-critical bg-critical/10': !selectedProduct()?.is_active}"
+                                class="text-xs font-medium px-2.5 py-0.5 rounded-full">
+                                {{ selectedProduct()?.is_active ? 'Activo' : 'Inactivo' }}
+                            </span>
+                        </div>
+                    </div>
+                    <button (click)="closeDetailModal()"
+                        class="p-1 rounded-lg text-text-secondary hover:text-text-primary hover:bg-border-subtle transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+                        <div>
+                            <p class="text-xs text-text-secondary font-medium uppercase tracking-wider">Unidad de
+                                Medida</p>
+                            <p class="text-text-primary mt-1 capitalize">{{ selectedProduct()?.unit_of_measure }}
+                            </p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-text-secondary font-medium uppercase tracking-wider">Proveedor
+                                Principal</p>
+                            <p class="text-text-primary mt-1">{{ selectedProduct()?.supplier || 'No especificado' }}
+                            </p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-text-secondary font-medium uppercase tracking-wider">Creado el
+                            </p>
+                            <p class="text-text-primary mt-1">{{ selectedProduct()?.created_at | date:'dd/MM/yyyy, HH:mm' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-text-secondary font-medium uppercase tracking-wider">Última
+                                Actualización</p>
+                            <p class="text-text-primary mt-1">{{ selectedProduct()?.updated_at | date:'dd/MM/yyyy, HH:mm' }}</p>
+                        </div>
+                    </div>
+
+                    <div
+                        class="bg-main border border-border-subtle rounded-xl p-5 grid grid-cols-1 sm:grid-cols-2 gap-4 text-center">
+                        <div>
+                            <p class="text-xs text-text-secondary">Umbral de Alerta (Stock Mín)</p>
+                            <p class="text-2xl font-bold text-critical mt-1">{{ selectedProduct()?.min_stock }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-text-secondary">Stock Físico Actual</p>
+                            <p class="text-2xl font-bold text-text-primary mt-1">{{ selectedProduct()?.current_stock
+                                }}</p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <p class="text-xs text-text-secondary font-medium uppercase tracking-wider">Notas
+                            Adicionales</p>
+                        <div class="bg-main border border-border-subtle rounded-xl p-4 mt-2 h-24 overflow-y-auto">
+                            <p class="text-sm text-text-primary whitespace-pre-wrap">{{ selectedProduct()?.notes ||
+                                'No hay notas adicionales.' }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 pt-5 border-t border-border-subtle text-right">
+                    <button (click)="closeDetailModal()" type="button"
+                        class="w-full sm:w-auto inline-flex justify-center rounded-lg border border-border-subtle px-6 py-2 bg-surface text-text-secondary font-medium hover:text-text-primary hover:bg-border-subtle/50 transition-colors">
+                        Cerrar Detalle
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div *ngIf="isDeleteModalOpen()" class="fixed inset-0 z-[60] overflow-y-auto" aria-labelledby="modal-title"
+        role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+
+            <div (click)="closeDeleteModal()" class="fixed inset-0 bg-main/80 backdrop-blur-sm transition-opacity"
+                aria-hidden="true"></div>
+
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            <div
+                class="inline-block align-bottom bg-surface border border-border-subtle rounded-2xl p-6 text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+
+                <div class="sm:flex sm:items-start">
+                    <div
+                        class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-critical/10 sm:mx-0 sm:h-10 sm:w-10">
+                        <svg class="h-6 w-6 text-critical" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                    </div>
+                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                        <h3 class="text-lg leading-6 font-semibold text-text-primary" id="modal-title">
+                            Eliminar Producto
+                        </h3>
+                        <div class="mt-2">
+                            <p class="text-sm text-text-secondary">
+                                ¿Estás seguro de que deseas eliminar este producto? Esta acción realizará una baja
+                                lógica y se ocultará de tu inventario activo.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 sm:mt-8 sm:flex sm:flex-row-reverse">
+                    <button (click)="confirmDelete()" type="button"
+                        class="w-full inline-flex justify-center rounded-lg border border-transparent px-4 py-2 bg-critical text-base font-medium text-white hover:bg-critical/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-main focus:ring-critical sm:ml-3 sm:w-auto sm:text-sm transition-colors shadow-lg shadow-critical/20">
+                        Sí, eliminar
+                    </button>
+                    <button (click)="closeDeleteModal()" type="button"
+                        class="mt-3 w-full inline-flex justify-center rounded-lg border border-border-subtle px-4 py-2 bg-surface text-base font-medium text-text-secondary hover:text-text-primary hover:bg-border-subtle/50 focus:outline-none sm:mt-0 sm:w-auto sm:text-sm transition-colors">
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
