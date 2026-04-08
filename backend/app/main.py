@@ -41,7 +41,8 @@ def create_app() -> FastAPI:
 
     allowed_origins = [
         "http://localhost:4200", 
-        "http://localhost:8000"
+        "http://localhost:8000",
+        "https://stockflow-system.vercel.app"
     ]
 
     app.add_middleware(
