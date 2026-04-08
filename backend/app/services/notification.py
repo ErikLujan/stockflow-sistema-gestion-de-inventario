@@ -55,7 +55,7 @@ class NotificationService:
                             
                             <tr>
                                 <td align="center" style="padding: 30px 20px 20px 20px; border-bottom: 1px solid #241B3B;">
-                                    <img src="https://approvingly-gemological-alonso.ngrok-free.dev/static/icono.png" alt="StockFlow Logo" width="48" height="48" style="display: block; margin-bottom: 10px; border-radius: 50%;">
+                                    <img src="https://stockflow-backend-xuvj.onrender.com/static/icono.png" alt="StockFlow Logo" width="48" height="48" style="display: block; margin-bottom: 10px; border-radius: 50%;">
                                     <h2 style="margin: 0; font-size: 20px; color: #F8F5FF; letter-spacing: 1px;">StockFlow</h2>
                                 </td>
                             </tr>
