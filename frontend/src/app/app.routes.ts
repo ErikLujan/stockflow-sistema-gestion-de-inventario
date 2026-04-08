@@ -7,6 +7,7 @@ import { DashboardComponent } from './features/dashboard/dashboard.component';
 import { ProductListComponent } from './features/products/product-list/product-list.component';
 import { ProductFormComponent } from './features/products/product-form/product-form.component';
 import { UserListComponent } from './features/user-list/user-list.component';
+import { NotFoundComponent } from './features/not-found/not-found.component';
 
 export const routes: Routes = [
     { 
@@ -58,5 +59,5 @@ export const routes: Routes = [
             { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
         ]
     },
-    { path: '**', redirectTo: '/login' }
+    { path: '**', component: NotFoundComponent }
 ];

@@ -1,0 +1,35 @@
+<div class="min-h-screen flex items-center justify-center p-4 bg-main relative overflow-hidden">
+    
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-accent/10 rounded-full blur-[100px] sm:blur-[120px] pointer-events-none animate-fade-in-up"></div>
+
+    <div class="relative max-w-lg w-full text-center space-y-6 sm:space-y-8 p-8 sm:p-12 bg-surface/80 backdrop-blur-xl border border-border-subtle rounded-3xl shadow-2xl animate-fade-in-up" style="animation-delay: 100ms; animation-fill-mode: backwards;">
+        
+        <div class="flex flex-col items-center justify-center">
+            <div class="bg-warning/10 p-4 sm:p-5 rounded-full border border-warning/20 text-warning shadow-lg shadow-warning/10 mb-2">
+                <svg class="w-10 h-10 sm:w-12 sm:h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+            </div>
+            
+            <h1 class="text-8xl sm:text-9xl font-extrabold tracking-tighter bg-clip-text text-transparent bg-gradient-to-br from-text-primary to-text-secondary/30 pb-2">
+                404
+            </h1>
+        </div>
+
+        <div class="space-y-3">
+            <h2 class="text-2xl sm:text-3xl font-bold text-text-primary">Ruta no encontrada</h2>
+            <p class="text-text-secondary text-sm sm:text-base px-2 sm:px-6">
+                Parece que te has perdido en el inventario. La página que estás buscando no existe, ha sido movida o no tienes permisos para verla.
+            </p>
+        </div>
+
+        <div class="pt-2">
+            <button routerLink="/" class="inline-flex items-center justify-center px-6 py-3.5 bg-accent hover:bg-accent-hover text-white rounded-xl font-medium transition-all shadow-lg shadow-accent/25 hover:shadow-accent/40 active:scale-95 w-full sm:w-auto">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Volver al Inicio
+            </button>
+        </div>
+    </div>
+</div>
